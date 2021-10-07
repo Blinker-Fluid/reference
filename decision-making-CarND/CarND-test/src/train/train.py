@@ -13,6 +13,7 @@ import subprocess
 import time
 import psutil
 import pyautogui
+from pynput.mouse import Listener
 import os
 import pickle
 from multiprocessing import Pool
@@ -20,7 +21,6 @@ from keras.backend.tensorflow_backend import set_session
 config = tf.ConfigProto()
 config.gpu_options.per_process_gpu_memory_fraction = 0.3
 set_session(tf.Session(config=config))
-# import os
 # os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 # os.environ["CUDA_VISIBLE_DEVICES"] = "4,5,6,7"
 
@@ -37,7 +37,7 @@ class DQNAgent:
         self.gamma = 0.90    # discount rate
         self.epsilon = 1.0   # exploration rate
         self.epsilon_min = 0.3
-        self.epsilon_decay = 1.0  # init with pure exploration
+        self.epsilon_decay = 0.9  # init with pure exploration
         self.learning_rate = 0.00025
         self.model = self._build_model()
         self.target_model = self._build_model()
@@ -72,6 +72,8 @@ class DQNAgent:
         # model.compile(loss='mse',
         #               optimizer=Adam(lr=self.learning_rate))
         return model
+
+
 
     def update_target_model(self):
         # copy weights from model to target_model
@@ -146,9 +148,11 @@ def close_all(sim):
     time.sleep(2)
     kill_terminal()
 
+def _on_click_(x, y, button, pressed):
+    return pressed
 
 EPISODES = 100
-location = "your_path_to/CarND-test/build"
+location = "/home/doi5/Autonomous-Driving/decision-making-CarND/CarND-test/build"
 
 HOST = '127.0.0.1'
 PORT = 1234
@@ -178,11 +182,16 @@ while episode <= EPISODES:
     pool.close()
     pool.join()
     conn = result[0].get()
-    sim = subprocess.Popen('your_path_to/term3_sim_linux/term3_sim.x86_64')
-    time.sleep(2)
-    pyautogui.click(x=1164, y=864, button='left')
-    time.sleep(6)
-    pyautogui.click(x=465, y=535, button='left')
+    sim = subprocess.Popen('/home/doi5/Autonomous-Driving/decision-making-CarND/term3_sim_linux/term3_sim.x86_64')
+    while not Listener(on_click=_on_click_):
+        pass
+
+    while not Listener(on_click=_on_click_):
+        pass
+    #time.sleep(10)
+    #pyautogui.click(x=1164, y=864, button='left')
+
+    #pyautogui.click(x=465, y=535, button='left')
     try:
         data = conn.recv(2000)  # 把接收的数据实例化
     except Exception as e:
@@ -247,6 +256,7 @@ while episode <= EPISODES:
 
     # 开始训练过程
     while True:
+        print("pass")
         # now = time.time()
         # if (now - start) / 60 > 15:
         #     close_all(sim)
@@ -262,16 +272,16 @@ while episode <= EPISODES:
                 pass
         data = bytes.decode(data)
         if data == "over":  # 此次迭代结束
-            agent.save("./train/episode" + str(episode) + ".h5")
+            agent.save("/home/doi5/Autonomous-Driving/decision-making-CarND/CarND-test/src/train/episode" + str(episode) + ".h5")
             print("weight saved")
             print("episode: {}, epsilon: {}".format(episode, agent.epsilon))
-            with open('./train/train.txt', 'a') as f:
+            with open('/home/doi5/Autonomous-Driving/decision-making-CarND/CarND-test/src/train/train.txt', 'a') as f:
                 f.write(" episode {} epsilon {}\n".format(episode, agent.epsilon))
             close_all(sim)
             conn.close()  # 关闭连接
-            with open('./train/exp1.pkl', 'wb') as exp1:
+            with open('/home/doi5/Autonomous-Driving/decision-making-CarND/CarND-test/src/trainexp1.pkl', 'wb') as exp1:
                 pickle.dump(agent.memory1, exp1)
-            with open('./train/exp2.pkl', 'wb') as exp2:
+            with open('/home/doi5/Autonomous-Driving/decision-making-CarND/CarND-test/src/train/exp2.pkl', 'wb') as exp2:
                 pickle.dump(agent.memory2, exp2)
             # with open('exp1.pkl', 'rb') as exp1:
             #     agent.memory1 = pickle.load(exp1)
@@ -294,10 +304,12 @@ while episode <= EPISODES:
             break
 
         # *****************在此处编写程序*****************
-        last_state =
-        last_pos =
-        last_act =
-        last_lane =
+        last_state = state
+        print(last_state)
+        last_pos = pos
+        last_act = action
+        print(last_act)
+        last_lane = ego_car_lane
         # **********************************************
 
         # Main car's localization Data
@@ -322,6 +334,7 @@ while episode <= EPISODES:
             last_reward = (2 * ((j[3] - 25.0) / 5.0)) - 10.0
         if grid[3:31, last_lane].sum() > 27 and last_act != 0:
             last_reward = -30.0
+
         grid = np.ones((51, 3))
         grid[31:35, ego_car_lane] = car_speed / 100.0
         # sensor_fusion_array = np.array(sensor_fusion)
@@ -359,10 +372,12 @@ while episode <= EPISODES:
         # action = agent.act()
         # *****************在此处编写程序*****************
         if last_act != 0:
-            agent.remember1(    )
+            agent.remember1(last_state, last_act, last_reward, state)
         else:
-            agent.remember2(    )
-        action = agent.act(    )
+            agent.remember2(last_state, last_act, last_reward, state)
+
+        action = agent.act([state, pos])
+        print("Took action ", action)
         # **********************************************
 
         count += 1
@@ -373,7 +388,7 @@ while episode <= EPISODES:
             print("target model updated")
             count = 0
 
-        if len(agent.memory1) > batch_size and len(agent.memory2) > batch_size:
+        #if len(agent.memory1) > batch_size and len(agent.memory2) > batch_size:
             # *****************在此处编写程序*****************
 
             # **********************************************
