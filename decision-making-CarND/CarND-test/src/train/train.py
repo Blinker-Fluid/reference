@@ -383,14 +383,14 @@ while episode <= EPISODES:
         count += 1
         if count == 10:
             # *****************在此处编写程序*****************
-
+            
             # **********************************************
             print("target model updated")
             count = 0
 
-        #if len(agent.memory1) > batch_size and len(agent.memory2) > batch_size:
+        if len(agent.memory1) > batch_size and len(agent.memory2) > batch_size:
             # *****************在此处编写程序*****************
-
+            agent.replay(batch_size)
             # **********************************************
 
         mess_out = str(action)
