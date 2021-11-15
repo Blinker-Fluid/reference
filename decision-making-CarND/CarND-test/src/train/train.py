@@ -383,7 +383,7 @@ while episode <= EPISODES:
         count += 1
         if count == 10:
             # *****************在此处编写程序*****************
-            
+            self.update_target_model()
             # **********************************************
             print("target model updated")
             count = 0
