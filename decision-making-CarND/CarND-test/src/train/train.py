@@ -99,13 +99,7 @@ class DQNAgent:
         minibatch1 = random.sample(self.memory1, int(batch_size / 2))
         minibatch2 = random.sample(self.memory2, batch_size - int(batch_size / 2))
         minibatch = minibatch1 + minibatch2
-        # for state, action, reward, next_state in minibatch:
-        #     # target = reward
-        #     target = (reward + self.gamma *
-        #               np.amax(self.model.predict(next_state)[0]))
-        #     target_f = self.model.predict(state)
-        #     target_f[0][action] = target
-        #     self.model.fit(state, target_f, epochs=1, verbose=0)
+        
         for state, action, reward, next_state in minibatch:
             target = self.model.predict(state)
             t = self.target_model.predict(next_state)[0]
