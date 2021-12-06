@@ -1,3 +1,10 @@
+# Lane Change Decision Making Using Deep Reinforcement Learning
+
+This is the repo for a project on a Reinforcement Learning Course. The goal was to replicate the results obtained by the authors of the paper "Lane change decision-making through deep reinforcement learning with rule-based constraints." This repo is a fork of their implementation. Experience replay and target model update were not implemented in the original repo. We have updated those in this repo. The details of installing and launching this package can be found [here](https://github.com/ghimiremukesh/Autonomous-Driving/tree/master/decision-making-CarND). Select the text of the readme and translate it to english for better understanding. 
+
+
+
+
 # Autonomous-Driving
 
 ## DRL for Autonomous driving paper
